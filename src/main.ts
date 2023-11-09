@@ -1,11 +1,11 @@
-import { NestFactory } from '@nestjs/core'
-import { AppModule } from './app.module'
-import { ConfigService } from '@nestjs/config'
-import { ValidationPipe, Logger } from '@nestjs/common'
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
-import { WinstonModule } from 'nest-winston'
-import * as winston from 'winston'
-import * as moment from 'moment'
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ConfigService } from '@nestjs/config';
+import { ValidationPipe, Logger } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { WinstonModule } from 'nest-winston';
+import * as winston from 'winston';
+import * as moment from 'moment';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -16,29 +16,29 @@ async function bootstrap() {
           format: winston.format.combine(
             winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), // 날짜 형식
             winston.format.prettyPrint({ colorize: true }),
-            winston.format.label({ label: 'foodfood' }), // 프로젝트 명
+            winston.format.label({ label: 'dollar guard' }), // 프로젝트 명
             winston.format.printf(({ level, message, label, timestamp }) => {
-              let logColor
+              let logColor;
               /*
                * Log Level
                * error: 0, warn: 1, info: 2, http: 3, verbose: 4, debug: 5, silly: 6
                */
               switch (level) {
                 case 'log':
-                  logColor = '\x1b[34m' // 파란색
-                  break
+                  logColor = '\x1b[34m'; // 파란색
+                  break;
                 case 'error':
-                  logColor = '\x1b[31m' // 빨간색
-                  break
+                  logColor = '\x1b[31m'; // 빨간색
+                  break;
                 case 'warn':
-                  logColor = '\x1b[33m' // 노란색
-                  break
+                  logColor = '\x1b[33m'; // 노란색
+                  break;
                 default:
-                  logColor = '\x1b[37m' // 흰색
-                  break
+                  logColor = '\x1b[37m'; // 흰색
+                  break;
               }
 
-              return `[${label}] ${logColor}${timestamp} [${level.toUpperCase()}] - ${message}\x1b[0m` // [프로젝트명] 시간 [로그레벨] 메세지
+              return `[${label}] ${logColor}${timestamp} [${level.toUpperCase()}] - ${message}\x1b[0m`; // [프로젝트명] 시간 [로그레벨] 메세지
             }),
           ),
         }),
@@ -51,26 +51,26 @@ async function bootstrap() {
           format: winston.format.combine(
             winston.format.errors({ stack: true }),
             winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-            winston.format.label({ label: 'foodfood' }), // 프로젝트 이름
+            winston.format.label({ label: 'dollar guard' }), // 프로젝트 이름
             winston.format.printf(({ level, message, label, timestamp }) => {
-              let logColor
+              let logColor;
 
               switch (level) {
                 case 'log':
-                  logColor = '\x1b[34m' // 파란색
-                  break
+                  logColor = '\x1b[34m'; // 파란색
+                  break;
                 case 'error':
-                  logColor = '\x1b[31m' // 빨간색
-                  break
+                  logColor = '\x1b[31m'; // 빨간색
+                  break;
                 case 'warn':
-                  logColor = '\x1b[33m' // 노란색
-                  break
+                  logColor = '\x1b[33m'; // 노란색
+                  break;
                 default:
-                  logColor = '\x1b[37m' // 흰색
-                  break
+                  logColor = '\x1b[37m'; // 흰색
+                  break;
               }
 
-              return `[${label}] ${logColor}${timestamp} [${level.toUpperCase()}] - ${message}\x1b[0m`
+              return `[${label}] ${logColor}${timestamp} [${level.toUpperCase()}] - ${message}\x1b[0m`;
             }),
             winston.format.json(), // 에러는 json형식으로 저장한다.
           ),
@@ -86,13 +86,13 @@ async function bootstrap() {
             winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
             winston.format.label({ label: 'foodfood' }),
             winston.format.printf(({ level, message, timestamp }) => {
-              return `${timestamp} [${level.toUpperCase()}] - ${message}`
+              return `${timestamp} [${level.toUpperCase()}] - ${message}`;
             }),
           ),
         }),
       ],
     }),
-  })
+  });
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('please insert project name')
@@ -100,9 +100,9 @@ async function bootstrap() {
     .setVersion('1.0.0')
     .addBearerAuth()
     .addTag('user')
-    .build()
-  const document = SwaggerModule.createDocument(app, swaggerConfig)
-  SwaggerModule.setup('swagger', app, document)
+    .build();
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('swagger', app, document);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -110,11 +110,11 @@ async function bootstrap() {
       whitelist: true,
       skipMissingProperties: true,
     }),
-  )
+  );
 
-  const configService = app.get(ConfigService)
-  const port = configService.get('PORT') || 3000
-  await app.listen(port)
-  Logger.log(`Application running on port ${port}`)
+  const configService = app.get(ConfigService);
+  const port = configService.get('PORT') || 3000;
+  await app.listen(port);
+  Logger.log(`Application running on port ${port}`);
 }
-bootstrap()
+bootstrap();
