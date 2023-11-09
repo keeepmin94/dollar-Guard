@@ -4,6 +4,11 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { typeORMConfig } from './config/typeorm.config'
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { BudgetModule } from './budget/budget.module';
+import { ExpenditureModule } from './expenditure/expenditure.module';
+import { CategoryModule } from './category/category.module';
+import { ConsultingModule } from './consulting/consulting.module';
+import { StatisticsModule } from './statistics/statistics.module';
 
 @Module({
   imports: [
@@ -25,6 +30,11 @@ import { UserModule } from './user/user.module';
     }),
     AuthModule,
     UserModule,
+    BudgetModule,
+    ExpenditureModule,
+    CategoryModule,
+    ConsultingModule,
+    StatisticsModule,
   ],
 })
 export class AppModule {}
