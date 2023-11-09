@@ -1,20 +1,12 @@
 import { Budget } from 'src/budget/entities/budget.entity';
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  OneToMany,
-  PrimaryColumn,
-  Unique,
-} from 'typeorm';
+import { BaseEntity, Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 
 @Entity('users')
-@Unique(['userName'])
 export class User extends BaseEntity {
   @PrimaryColumn()
   id: string;
 
-  @Column({ length: 50 })
+  @Column({ length: 50, unique: true })
   userName: string;
 
   @Column()

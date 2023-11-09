@@ -1,26 +1,41 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { User } from './entities/user.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { RegisterUser } from './dto/registerUser.dto';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UserService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
-  }
+  constructor(
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {}
 
-  findAll() {
-    return `This action returns all user`;
-  }
+  async signUp(registerUser: RegisterUser): Promise<object> {
+    const { userName, password } = registerUser;
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
+    const user = {
+      userName,
+      password: hashedPassword,
+    };
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+    try {
+      await this.userRepository.save(user);
+
+      return { message: '회원가입에 성공했습니다' };
+    } catch (error) {
+      if (error.code === '23505') {
+        throw new ConflictException('존재하는 유저 이름입니다.');
+      }
+      throw new InternalServerErrorException('회원가입에 실패 했습니다.');
+    }
   }
 }
