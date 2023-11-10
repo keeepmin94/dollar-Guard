@@ -27,16 +27,16 @@ export class BudgetService {
     return total;
   }
 
-  getLastDate(paramDate: string): Date[] {
-    const dateSplit = paramDate.split('-');
-    const year = Number(dateSplit[0]);
-    const month = Number(dateSplit[1]);
+  //   getLastDate(paramDate: string): Date[] {
+  //     const dateSplit = paramDate.split('-');
+  //     const year = Number(dateSplit[0]);
+  //     const month = Number(dateSplit[1]);
 
-    const start = new Date(year, month, 1);
-    const end = new Date(year, month + 1, 0);
+  //     const start = new Date(year, month, 1);
+  //     const end = new Date(year, month + 1, 0);
 
-    return [start, end];
-  }
+  //     return [start, end];
+  //   }
 
   private makeEachBudgetByCategory(
     category: object,
@@ -57,18 +57,18 @@ export class BudgetService {
   }
 
   async createBudget(budgetDto: BudgetDto, userId: string) {
-    const { budgetDate, priceByCategory } = budgetDto;
+    const { startDate, endDate, priceByCategory } = budgetDto;
+
     const total: number = this.getTotalAmount(Object.values(priceByCategory));
-    const [start, end] = this.getLastDate(budgetDate);
 
     try {
       const user = await this.userRepository.findOne({ where: { id: userId } });
 
       const budget_ = this.budgetRepository.create({
-        total: total,
-        startDate: start,
-        endDate: end,
-        user: user,
+        total,
+        startDate,
+        endDate,
+        user,
       });
 
       const budget = await this.budgetRepository.save(budget_);
@@ -80,7 +80,6 @@ export class BudgetService {
 
       await this.budgetCategoryRepository.save(eachBudget);
     } catch (error) {
-      console.log('q');
       console.log(error);
     }
   }

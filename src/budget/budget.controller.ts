@@ -3,6 +3,7 @@ import { BudgetDto } from './dto/budget.dto';
 import { BudgetService } from './budget.service';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { BudgetValidationPipe } from './pipe/custom-budget.pipe';
 
 @Controller('budget')
 export class BudgetController {
@@ -10,7 +11,10 @@ export class BudgetController {
 
   @UseGuards(AuthGuard())
   @Post()
-  async createBudget(@Body() budgetDto: BudgetDto, @Req() req) {
+  async createBudget(
+    @Body(BudgetValidationPipe) budgetDto: BudgetDto,
+    @Req() req,
+  ) {
     this.budgetService.createBudget(budgetDto, req.user.userId);
   }
 }
