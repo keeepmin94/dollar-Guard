@@ -14,10 +14,13 @@ import { ConfigService } from '@nestjs/config';
     TypeOrmModule.forFeature([User]),
     JwtModule.registerAsync({
       useFactory: (configService: ConfigService) => ({
+        global: true,
         secret: configService.get<string>('JWT_ACCESS_TOKEN_SECRET'),
-        expiresIn: Number(
-          configService.get<string>('JWT_ACCESS_TOKEN_EXPIRATION_TIME'),
-        ),
+        signOptions: {
+          expiresIn: configService.get<string>(
+            'JWT_ACCESS_TOKEN_EXPIRATION_TIME',
+          ),
+        },
       }),
       inject: [ConfigService],
     }),
