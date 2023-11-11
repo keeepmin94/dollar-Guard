@@ -1,5 +1,4 @@
 import {
-  IsDate,
   Validate,
   ValidatorConstraint,
   ValidatorConstraintInterface,
@@ -7,10 +6,11 @@ import {
 import { ValueOptions } from 'src/category/type/category.enum';
 import * as dayjs from 'dayjs';
 
+// 카테고리 형식 유효성 검사
 @ValidatorConstraint({ name: 'IsRightBudgetByCategory' })
 export class IsRightBudgetByCategory implements ValidatorConstraintInterface {
   private errorMessage = '';
-  // 카테고리 형식 유효성 검사
+
   private isOptionValid(key: any): boolean {
     const index = ValueOptions.indexOf(key);
     return index !== -1;
@@ -40,11 +40,11 @@ export class IsRightBudgetByCategory implements ValidatorConstraintInterface {
   }
 }
 
+// 날짜 형식 유효성 검사
 @ValidatorConstraint({ name: 'IsRightDateFormat' })
 export class IsRightDateFormat implements ValidatorConstraintInterface {
   validate(value: any): boolean {
     const regex = /^\d{4}(-)(((0)[0-9])|((1)[0-2]))(-)([0-2][0-9]|(3)[0-1])$/;
-    // return typeof value === 'string' && regex.test(value);
     return (
       typeof value === 'string' && regex.test(value) && dayjs(value).isValid()
     );
@@ -56,10 +56,6 @@ export class IsRightDateFormat implements ValidatorConstraintInterface {
 }
 
 export class BudgetDto {
-  //   @Matches(/^\d{4}-\d{2}$/, {
-  //     message: 'yyyy-MM 형식으로 입력해주세요.',
-  //   })
-  //   budgetDate: string;
   @Validate(IsRightDateFormat)
   startDate: Date;
   @Validate(IsRightDateFormat)
