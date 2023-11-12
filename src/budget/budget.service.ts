@@ -49,13 +49,13 @@ export class BudgetService {
     return result;
   }
 
-  async createBudget(budgetDto: BudgetDto, userId: string) {
+  async createBudget(budgetDto: BudgetDto, user: User) {
     const { startDate, endDate, priceByCategory } = budgetDto;
 
     const total: number = this.getTotalAmount(Object.values(priceByCategory));
 
     try {
-      const user = await this.userRepository.findOne({ where: { id: userId } });
+      //const user = await this.userRepository.findOne({ where: { id: userId } });
 
       const budget_ = this.budgetRepository.create({
         total,

@@ -4,6 +4,7 @@ import {
   ArgumentMetadata,
   BadRequestException,
 } from '@nestjs/common';
+import { categoryEnum } from 'src/category/type/category.enum';
 
 @Injectable()
 export class ExpenditureValidationPipe implements PipeTransform {
@@ -14,6 +15,10 @@ export class ExpenditureValidationPipe implements PipeTransform {
     if (Object.keys(value).length === 0) {
       const message = '수정할 값을 입력해주세요.';
       throw new BadRequestException(message);
+    }
+
+    if (value.category) {
+      value.category = categoryEnum[value.category];
     }
 
     return value;

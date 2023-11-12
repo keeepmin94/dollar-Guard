@@ -3,7 +3,6 @@ import {
   Controller,
   Post,
   Query,
-  Req,
   Get,
   ParseIntPipe,
 } from '@nestjs/common';
@@ -12,6 +11,8 @@ import { BudgetService } from './budget.service';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { BudgetValidationPipe } from './pipe/custom-budget.pipe';
+import { GetUser } from 'src/auth/decorator/get-user.decorator';
+import { User } from 'src/user/entities/user.entity';
 
 @UseGuards(AuthGuard())
 @Controller('budget')
@@ -21,9 +22,9 @@ export class BudgetController {
   @Post()
   async createBudget(
     @Body(BudgetValidationPipe) budgetDto: BudgetDto,
-    @Req() req,
+    @GetUser() user: User,
   ) {
-    this.budgetService.createBudget(budgetDto, req.user.userId);
+    this.budgetService.createBudget(budgetDto, user);
   }
 
   @Get()

@@ -29,10 +29,6 @@ export class Expenditure extends BaseEntity {
   @ManyToOne(() => Category, (category) => category.budgetCategorys)
   category: Category;
 
-  @ManyToOne(() => User, (user) => user.budgets)
+  @ManyToOne(() => User, (user) => user.expenditures)
   user: User;
-
-  // // 예산 id
-  // @ManyToOne(() => Budget, (budget) => budget.budgetCategorys)
-  // budget: Budget;
 }
