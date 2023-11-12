@@ -1,4 +1,5 @@
 import { Budget } from 'src/budget/entities/budget.entity';
+import { Expenditure } from 'src/expenditure/entities/expenditure.entity';
 import { BaseEntity, Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 
 @Entity('users')
@@ -23,4 +24,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Budget, (budget) => budget.user)
   budgets: Budget[];
+
+  @OneToMany(() => Expenditure, (expenditure) => expenditure.user)
+  expenditures: Expenditure[];
 }

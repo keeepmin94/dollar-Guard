@@ -1,4 +1,5 @@
-import { Budget } from 'src/budget/entities/budget.entity';
+// import { Budget } from 'src/budget/entities/budget.entity';
+import { User } from 'src/user/entities/user.entity';
 import { Category } from 'src/category/entities/category.entity';
 import {
   BaseEntity,
@@ -20,13 +21,18 @@ export class Expenditure extends BaseEntity {
   spentDate: Date;
 
   @Column()
+  memo: string;
+
+  @Column()
   exceptYn: boolean;
 
   @ManyToOne(() => Category, (category) => category.budgetCategorys)
   category: Category;
-  // 예산 id
-  @ManyToOne(() => Budget, (budget) => budget.budgetCategorys)
-  budget: Budget;
 
-  // 지출 테이블
+  @ManyToOne(() => User, (user) => user.budgets)
+  user: User;
+
+  // // 예산 id
+  // @ManyToOne(() => Budget, (budget) => budget.budgetCategorys)
+  // budget: Budget;
 }
