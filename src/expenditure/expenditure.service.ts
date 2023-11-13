@@ -7,9 +7,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Expenditure } from './entities/expenditure.entity';
 import { User } from 'src/user/entities/user.entity';
+import { Category } from 'src/category/entities/category.entity';
 import {
   ExpenditureCreateDto,
   ExpenditureUpdateDto,
+  ExpenditureListDto,
 } from './dto/expenditure.dto';
 import { categoryEnum } from 'src/category/type/category.enum';
 
@@ -20,6 +22,8 @@ export class ExpenditureService {
     private expenditureRepository: Repository<Expenditure>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Category)
+    private categoryRepository: Repository<Category>,
   ) {}
 
   async createExpenditure(
@@ -29,8 +33,6 @@ export class ExpenditureService {
     try {
       const { amountSpent, spentDate, memo, exceptYn, category } =
         expenditureCreateDto;
-
-      //const user = await this.userRepository.findOne({ where: { id: userId } });
 
       const expenditure_ = this.expenditureRepository.create({
         amountSpent,
@@ -92,6 +94,125 @@ export class ExpenditureService {
       }
 
       return { message: '성공적으로 지출 삭제를 완료했습니다.' };
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async getExpenditureList(
+    expenditureListDto: ExpenditureListDto,
+    user: User,
+  ): Promise<object[]> {
+    try {
+      const { startDate, endDate, category, minimum, maximum } =
+        expenditureListDto;
+      const userId = user.id;
+
+      // 지출 합계
+      const queryBuilderTotal = this.expenditureRepository
+        .createQueryBuilder('expenditure')
+        .select(['sum(amount_spent) as amount '])
+        .where('user_id = :userId', { userId })
+        .andWhere('spent_date >= :startDate', { startDate })
+        .andWhere('spent_date <= :endDate', { endDate })
+        .andWhere('except_yn = false ');
+
+      if (category)
+        queryBuilderTotal.andWhere('category_id = :category', { category });
+      if (minimum)
+        queryBuilderTotal.andWhere('spent_amount >= :minimum', { minimum });
+      if (maximum)
+        queryBuilderTotal.andWhere('spent_amount <= :maximum', { maximum });
+
+      // ------------------------------------------------------------------
+
+      // 카테고리별 지출 합계
+      const subQuery = this.expenditureRepository
+        .createQueryBuilder()
+        .subQuery()
+        .select(['sum(amount_spent) as amount', 'category_id '])
+        .from(Expenditure, 'expenditure')
+        .where('user_id = :userId', { userId })
+        .andWhere('spent_date >= :startDate', { startDate })
+        .andWhere('spent_date <= :endDate', { endDate })
+        .andWhere('except_yn = false ');
+
+      if (minimum) subQuery.andWhere('spent_amount >= :minimum', { minimum });
+
+      if (maximum) subQuery.andWhere('spent_amount <= :maximum', { maximum });
+
+      if (category) subQuery.andWhere('category_id = :category', { category });
+
+      const finalQuery = subQuery.groupBy('category_id').getQuery();
+
+      const queryBuilderCategory = this.categoryRepository
+        .createQueryBuilder('cat')
+        .select(['cat.name', 'sub.amount'])
+        .innerJoin(finalQuery, 'sub', 'sub.category_id = cat.id')
+        .setParameter('userId', userId)
+        .setParameter('startDate', startDate)
+        .setParameter('endDate', endDate);
+
+      if (minimum) queryBuilderCategory.setParameter('minimum', minimum);
+
+      if (maximum) queryBuilderCategory.setParameter('maximum', maximum);
+
+      if (category) queryBuilderCategory.setParameter('category', category);
+
+      //---------------------------------------------------------------------------
+
+      // 지출 목록
+      const listSubQuery = this.expenditureRepository
+        .createQueryBuilder()
+        .subQuery()
+        .select([
+          'id',
+          'amount_spent',
+          'spent_date',
+          'except_yn',
+          'category_id',
+        ])
+        .from(Expenditure, 'expenditure')
+        .where('user_id = :userId', { userId })
+        .andWhere('spent_date >= :startDate', { startDate })
+        .andWhere('spent_date <= :endDate', { endDate });
+
+      if (minimum)
+        listSubQuery.andWhere('spent_amount >= :minimum', { minimum });
+
+      if (maximum)
+        listSubQuery.andWhere('spent_amount <= :maximum', { maximum });
+
+      if (category)
+        listSubQuery.andWhere('category_id = :category', { category });
+
+      const finalListQuery = listSubQuery.getQuery();
+
+      const queryBuilderList = this.categoryRepository
+        .createQueryBuilder('cat')
+        .select([
+          'sub.id',
+          'sub.amount_spent',
+          'spent_date',
+          'cat.name',
+          'except_yn',
+        ])
+        .innerJoin(finalListQuery, 'sub', 'sub.category_id = cat.id')
+        .setParameter('userId', userId)
+        .setParameter('startDate', startDate)
+        .setParameter('endDate', endDate);
+
+      if (minimum) queryBuilderList.setParameter('minimum', minimum);
+
+      if (maximum) queryBuilderList.setParameter('maximum', maximum);
+
+      if (category) queryBuilderList.setParameter('category', category);
+
+      const totalAmount = await queryBuilderTotal.getRawOne();
+      const categoryAmount = await queryBuilderCategory.getRawMany();
+      const list = await queryBuilderList.getRawMany();
+
+      return [{ ...totalAmount }, { ...categoryAmount }, { ...list }];
     } catch (error) {
       console.log(error);
     }

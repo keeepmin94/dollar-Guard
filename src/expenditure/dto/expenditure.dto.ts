@@ -48,3 +48,18 @@ export class ExpenditureUpdateDto {
   @IsIn(ValueOptions)
   category?: Category;
 }
+
+export class ExpenditureListDto {
+  @Validate(IsRightDateFormat)
+  startDate: Date;
+
+  @Validate(IsRightDateFormat)
+  endDate: Date;
+
+  @IsIn(ValueOptions)
+  category?: Category;
+
+  minimum?: number;
+
+  maximum?: number;
+}

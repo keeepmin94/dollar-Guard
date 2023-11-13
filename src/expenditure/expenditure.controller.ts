@@ -2,19 +2,25 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   ExpenditureCreateDto,
   ExpenditureUpdateDto,
+  ExpenditureListDto,
 } from './dto/expenditure.dto';
 import { ExpenditureService } from './expenditure.service';
 import { AuthGuard } from '@nestjs/passport';
 import { UseGuards } from '@nestjs/common';
-import { ExpenditureValidationPipe } from './pipe/custom-expenditure.pipe';
+import {
+  ExpenditureValidationPipe,
+  ExpenditureListValidationPipe,
+} from './pipe/custom-expenditure.pipe';
 import { GetUser } from 'src/auth/decorator/get-user.decorator';
 import { User } from 'src/user/entities/user.entity';
 
@@ -53,5 +59,14 @@ export class ExpenditureController {
     @GetUser() user: User,
   ): Promise<object> {
     return await this.expenditureService.deleteExpenditure(id, user);
+  }
+
+  @Get('list')
+  async getExpenditureList(
+    @Query(ExpenditureListValidationPipe)
+    expenditureListDto: ExpenditureListDto,
+    @GetUser() user: User,
+  ): Promise<object[]> {
+    return this.expenditureService.getExpenditureList(expenditureListDto, user);
   }
 }

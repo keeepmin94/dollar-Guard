@@ -55,8 +55,6 @@ export class BudgetService {
     const total: number = this.getTotalAmount(Object.values(priceByCategory));
 
     try {
-      //const user = await this.userRepository.findOne({ where: { id: userId } });
-
       const budget_ = this.budgetRepository.create({
         total,
         startDate,

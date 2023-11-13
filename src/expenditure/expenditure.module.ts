@@ -5,11 +5,12 @@ import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Expenditure } from './entities/expenditure.entity';
 import { User } from 'src/user/entities/user.entity';
+import { Category } from 'src/category/entities/category.entity';
 
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    TypeOrmModule.forFeature([Expenditure, User]),
+    TypeOrmModule.forFeature([Expenditure, User, Category]),
   ],
   controllers: [ExpenditureController],
   providers: [ExpenditureService],
