@@ -217,4 +217,24 @@ export class ExpenditureService {
       console.log(error);
     }
   }
+
+  async getExpenditureDetail(id: number, user: User): Promise<Expenditure> {
+    try {
+      const expenditure = await this.expenditureRepository.findOne({
+        where: {
+          id,
+          user: {
+            id: user.id,
+          },
+        },
+        relations: {
+          category: true,
+        },
+      });
+
+      return expenditure;
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }

@@ -23,6 +23,7 @@ import {
 } from './pipe/custom-expenditure.pipe';
 import { GetUser } from 'src/auth/decorator/get-user.decorator';
 import { User } from 'src/user/entities/user.entity';
+import { Expenditure } from './entities/expenditure.entity';
 
 @UseGuards(AuthGuard())
 @Controller('expenditure')
@@ -68,5 +69,13 @@ export class ExpenditureController {
     @GetUser() user: User,
   ): Promise<object[]> {
     return this.expenditureService.getExpenditureList(expenditureListDto, user);
+  }
+
+  @Get('/:id')
+  async getExpenditureDetail(
+    @Param('id', ParseIntPipe) id: number,
+    @GetUser() user: User,
+  ): Promise<Expenditure> {
+    return this.expenditureService.getExpenditureDetail(id, user);
   }
 }
