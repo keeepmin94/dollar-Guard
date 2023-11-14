@@ -9,6 +9,7 @@ import { ExpenditureModule } from './expenditure/expenditure.module';
 import { CategoryModule } from './category/category.module';
 import { ConsultingModule } from './consulting/consulting.module';
 import { StatisticsModule } from './statistics/statistics.module';
+import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { StatisticsModule } from './statistics/statistics.module';
     CategoryModule,
     ConsultingModule,
     StatisticsModule,
+    WebhookModule,
   ],
 })
 export class AppModule {}
