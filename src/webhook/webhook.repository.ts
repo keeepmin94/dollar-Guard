@@ -12,7 +12,7 @@ export class WebhookRepository extends BaseEntity {
     super();
   }
 
-  async getMorningConsultingUsers(): Promise<object[]> {
+  async getMorningConsultingUsers(consulting_yn: string): Promise<object[]> {
     const users = await this.manager.connection
       .createQueryBuilder()
       .select([
@@ -24,7 +24,7 @@ export class WebhookRepository extends BaseEntity {
         'budget.budget_id',
       ])
       .from(User, 'user')
-      .where('user.morning_consulting_yn = true')
+      .where(`user.${consulting_yn} = true`)
       .andWhere('user.discord_url is not null')
       .innerJoin(
         (subBudget) => {
@@ -85,6 +85,26 @@ export class WebhookRepository extends BaseEntity {
       ])
       .from(Expenditure, 'expenditure')
       .where('expenditure.spent_date between :start and :end', { start, end })
+      .andWhere('expenditure.user_id = :userId', { userId })
+      .innerJoin(Category, 'category', 'expenditure.category_id = category.id')
+      .groupBy('category.name')
+      .getRawMany();
+
+    return expenditures;
+  }
+
+  async getUsersTodayExpenditure(
+    userId: string,
+    today: Date,
+  ): Promise<object[]> {
+    const expenditures = await this.manager.connection
+      .createQueryBuilder()
+      .select([
+        'sum(expenditure.amount_spent) AS total_price',
+        'category.name AS category',
+      ])
+      .from(Expenditure, 'expenditure')
+      .where('expenditure.spent_date = :today', { today })
       .andWhere('expenditure.user_id = :userId', { userId })
       .innerJoin(Category, 'category', 'expenditure.category_id = category.id')
       .groupBy('category.name')
