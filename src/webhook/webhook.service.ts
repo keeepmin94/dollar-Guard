@@ -7,7 +7,9 @@ import {
   arrayToObject,
   truncationWon,
   calculatePercentage,
+  amountForm,
 } from 'src/common/utils';
+import { payloads } from './discord.payload';
 
 @Injectable()
 export class WebhookService {
@@ -35,8 +37,8 @@ export class WebhookService {
     allDays: number,
     days: number,
     expenditures: object[],
-  ): { canUseTotal: number; message: string } {
-    let message = '';
+  ): { canUseTotal: number; condition: string } {
+    let condition = '';
 
     // 지출 총액
     const expenditureTotal = expenditures.reduce(
@@ -49,22 +51,20 @@ export class WebhookService {
 
     const averageAmount = truncationWon((total_budget / allDays) * days, 100);
 
-    if (expenditureTotal <= averageAmount * 0.7)
-      message = '아주 잘 아끼고 있습니다! 오늘도 화이팅!';
+    if (expenditureTotal <= averageAmount * 0.7) condition = 'good';
     else if (
       expenditureTotal > averageAmount * 0.7 &&
       expenditureTotal <= averageAmount
     )
-      message = '충분히 잘 아끼고 있어요! 오늘도 열심히!';
+      condition = 'proper';
     else if (
       expenditureTotal > averageAmount &&
       expenditureTotal < total_budget
     )
-      message = '하루 소비량이 기준치를 넘었어요! 오늘은 아껴쓰세요!';
-    else if (expenditureTotal >= total_budget)
-      message = '소비량이 총 예산을 넘었어요! 절약!';
+      condition = 'warning';
+    else if (expenditureTotal >= total_budget) condition = 'danger';
 
-    return { canUseTotal, message };
+    return { canUseTotal, condition };
   }
 
   getChooseExpenditure(
@@ -121,7 +121,6 @@ export class WebhookService {
           expenditure,
           user['end_date'],
         );
-        console.log(result);
 
         const allDays: number = getDateDiff(
           user['start_date'],
@@ -129,10 +128,27 @@ export class WebhookService {
         );
         const days: number = this.getStartingPeriod(user['start_date']);
 
-        const condition: { canUseTotal: number; message: string } =
+        const conditions: { canUseTotal: number; condition: string } =
           this.getUsersCondition(user['total'], allDays, days, expenditure);
 
-        console.log(condition);
+        const payload = [
+          {
+            name: `총합 : ${amountForm(conditions.canUseTotal)}₩`,
+            value: '',
+            inline: true,
+          },
+        ];
+
+        for (const key in result) {
+          payload[0].value += `${key} : ₩${amountForm(result[key])} \n `;
+        }
+
+        const message = payloads.MORNING_CONSULTING(
+          payload,
+          conditions.condition,
+        );
+
+        this.sendDiscord(user['discord_url'], message);
       });
 
       return users;
@@ -141,37 +157,38 @@ export class WebhookService {
     }
   }
 
-  //적정 금액 구해서 오늘 지출과 비교
+  // 오늘 사용했을 적정 금액
   getAdequateAmount(
     budgets: object[],
-    expenditureToday: object[],
-    beforeExpenditure: object[],
+    beforeExpenditureObject: object,
     endDate: Date,
   ) {
     // (오늘기준) 종료일자까지 남은 기간
     const remainingPeriod = this.getRemainingPeriod(endDate);
-
-    const expenditureTodayObject = arrayToObject(expenditureToday);
-    const beforeExpenditureObject = arrayToObject(beforeExpenditure);
     const adequateAmount = {};
-    const adequatePercentage = {};
 
     //적정 금액 구하기 ((카테고리별 예산 - 여태까지 쓴 금액) /  남은 일자)
     budgets.forEach((budget) => {
       const adequateCategory = beforeExpenditureObject[budget['category']]
         ? Number(beforeExpenditureObject[budget['category']])
         : 0;
-      adequateAmount[budget['category']] = truncationWon(
+
+      const amount = truncationWon(
         (Number(budget['total_price']) - adequateCategory) / remainingPeriod,
         100,
       );
+      adequateAmount[budget['category']] = amount < 0 ? 0 : amount;
     });
 
-    console.log('오늘 사용했을 적정 금액은 ');
-    console.log(adequateAmount);
+    return adequateAmount;
+  }
 
-    console.log('오늘 지출 금액은 ');
-    console.log(expenditureTodayObject);
+  // 오늘 사용했을 적정 금액 퍼센티지
+  getAdequatePercentage(
+    expenditureToday: object[],
+    adequateAmount: object,
+  ): object {
+    const adequatePercentage = {};
 
     // 적정 금액과 지출 금액 비교
     expenditureToday.forEach((expenditure) => {
@@ -182,9 +199,22 @@ export class WebhookService {
 
       const percentage = calculatePercentage(todayMoney, adequateMoney);
 
-      adequatePercentage[expenditure['category']] = percentage + '%';
+      adequatePercentage[expenditure['category']] =
+        percentage < 0 ? '❌' : percentage + '%';
     });
-    console.log(adequatePercentage);
+
+    return adequatePercentage;
+  }
+
+  async sendDiscord(discordUrl: string, data: object) {
+    await this.httpService.post(discordUrl, data).subscribe({
+      complete: () => {
+        console.log('completed');
+      },
+      error: (err) => {
+        console.log(err);
+      },
+    });
   }
 
   @Cron(`0 0 8 * * *`, { name: 'eveningCronTask' })
@@ -210,8 +240,8 @@ export class WebhookService {
           );
 
         //유저의 당일 지출이 없다면 발송 안하고 다음 유저로
-        if (!expenditureToday) return;
-
+        if (!expenditureToday.length) return;
+        const expenditureTodayObject = arrayToObject(expenditureToday); //오늘 지출 객체
         const yesterday = new Date(today.setDate(today.getDate() - 1));
 
         // 유저가 어제까지 지출한 카테고리별 금액 불러오기
@@ -221,13 +251,51 @@ export class WebhookService {
             user['start_date'],
             yesterday,
           );
+        const beforeExpenditureObject = arrayToObject(beforeExpenditure); //여태 지출 객체
 
-        this.getAdequateAmount(
+        const amount = this.getAdequateAmount(
           budget,
-          expenditureToday,
-          beforeExpenditure,
+          beforeExpenditureObject,
           user['end_date'],
         );
+
+        const percentage = this.getAdequatePercentage(expenditureToday, amount);
+
+        const payload = [
+          {
+            name: `💰적정 금액`,
+            value: '',
+            inline: true,
+          },
+          {
+            name: `💸지출 금액`,
+            value: '',
+            inline: true,
+          },
+          {
+            name: `❗️위험도`,
+            value: '',
+            inline: true,
+          },
+        ];
+
+        // 적정금액 필드
+        for (const key in amount) {
+          payload[0].value += `${key} : ₩${amountForm(amount[key])} \n `;
+        }
+
+        // 적정비율 필드
+        for (const key in expenditureTodayObject) {
+          payload[1].value += `${key} : ₩${amountForm(
+            expenditureTodayObject[key],
+          )} \n `;
+
+          payload[2].value += `(${percentage[key]}) \n `;
+        }
+
+        const message = payloads.EVENING_CONSULTING(payload);
+
+        this.sendDiscord(user['discord_url'], message);
       });
     } catch (error) {
       console.log(error);

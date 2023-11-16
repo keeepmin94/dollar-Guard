@@ -24,3 +24,7 @@ export const calculatePercentage = (part, whole): number => {
   if (!whole) return -100;
   return Math.round((part / whole) * 100);
 };
+
+export const amountForm = (amount: number): string => {
+  return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
