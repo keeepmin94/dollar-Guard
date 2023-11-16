@@ -19,3 +19,8 @@ export const arrayToObject = (array: object[]): object => {
 export const truncationWon = (won: number, truncation: number): number => {
   return Math.floor(won / truncation) * truncation;
 };
+
+export const calculatePercentage = (part, whole): number => {
+  if (!whole) return -100;
+  return Math.round((part / whole) * 100);
+};

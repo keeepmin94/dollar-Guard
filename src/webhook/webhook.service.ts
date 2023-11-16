@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { HttpService } from '@nestjs/axios';
 import { WebhookRepository } from './webhook.repository';
-import { getDateDiff, arrayToObject, truncationWon } from 'src/common/utils';
+import {
+  getDateDiff,
+  arrayToObject,
+  truncationWon,
+  calculatePercentage,
+} from 'src/common/utils';
 
 @Injectable()
 export class WebhookService {
@@ -83,9 +88,7 @@ export class WebhookService {
 
       // 너무 적은 금액일시 최소금액으로 추천
       const value = won >= this.minimumAmount ? won : this.minimumAmount;
-      //   gapAmount.amount = value;
-      //   gapAmount.category = budget['category'];
-      //   result.push(gapAmount);
+
       result[budget['category']] = value;
     });
     return result;
@@ -138,15 +141,51 @@ export class WebhookService {
     }
   }
 
-  //   getAdequateAmount(
-  //     budgets: object[],
-  //     expenditureToday: object[],
-  //     beforeExpenditure: object[],
-  //   ) {
-  //     expenditureToday.forEach((expenditure) => {
-  //       const budgetAmount = budgets[expenditure['category']];
-  //     });
-  //   }
+  //적정 금액 구해서 오늘 지출과 비교
+  getAdequateAmount(
+    budgets: object[],
+    expenditureToday: object[],
+    beforeExpenditure: object[],
+    endDate: Date,
+  ) {
+    // (오늘기준) 종료일자까지 남은 기간
+    const remainingPeriod = this.getRemainingPeriod(endDate);
+
+    const expenditureTodayObject = arrayToObject(expenditureToday);
+    const beforeExpenditureObject = arrayToObject(beforeExpenditure);
+    const adequateAmount = {};
+    const adequatePercentage = {};
+
+    //적정 금액 구하기 ((카테고리별 예산 - 여태까지 쓴 금액) /  남은 일자)
+    budgets.forEach((budget) => {
+      const adequateCategory = beforeExpenditureObject[budget['category']]
+        ? Number(beforeExpenditureObject[budget['category']])
+        : 0;
+      adequateAmount[budget['category']] = truncationWon(
+        (Number(budget['total_price']) - adequateCategory) / remainingPeriod,
+        100,
+      );
+    });
+
+    console.log('오늘 사용했을 적정 금액은 ');
+    console.log(adequateAmount);
+
+    console.log('오늘 지출 금액은 ');
+    console.log(expenditureTodayObject);
+
+    // 적정 금액과 지출 금액 비교
+    expenditureToday.forEach((expenditure) => {
+      const todayMoney = Number(expenditure['total_price']);
+      const adequateMoney = adequateAmount[expenditure['category']]
+        ? adequateAmount[expenditure['category']]
+        : 0;
+
+      const percentage = calculatePercentage(todayMoney, adequateMoney);
+
+      adequatePercentage[expenditure['category']] = percentage + '%';
+    });
+    console.log(adequatePercentage);
+  }
 
   @Cron(`0 0 8 * * *`, { name: 'eveningCronTask' })
   async eveningSchedule() {
@@ -160,12 +199,13 @@ export class WebhookService {
           user['budget_id'],
         );
 
-        const today = new Date();
+        const today = new Date(new Date().setHours(0, 0, 0, 0));
 
         // 유저가 지출한 카테고리별 금액 불러오기
         const expenditureToday =
-          await this.webhookRepository.getUsersTodayExpenditure(
+          await this.webhookRepository.getUsersExpenditure(
             user['user_id'],
+            today,
             today,
           );
 
@@ -181,6 +221,13 @@ export class WebhookService {
             user['start_date'],
             yesterday,
           );
+
+        this.getAdequateAmount(
+          budget,
+          expenditureToday,
+          beforeExpenditure,
+          user['end_date'],
+        );
       });
     } catch (error) {
       console.log(error);

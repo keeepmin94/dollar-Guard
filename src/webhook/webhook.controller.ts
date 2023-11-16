@@ -6,7 +6,7 @@ export class WebhookController {
   constructor(private webhookService: WebhookService) {}
 
   @Get()
-  async getTestMorningConsult(): Promise<object[]> {
-    return await this.webhookService.morningSchedule();
+  async getTestMorningConsult() {
+    await this.webhookService.eveningSchedule();
   }
 }
