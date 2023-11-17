@@ -1,3 +1,5 @@
+import { getRandom } from 'src/common/utils';
+
 const conditionType = {
   good: {
     url: 'https://mblogthumb-phinf.pstatic.net/MjAxODAzMTVfMTk2/MDAxNTIxMDc4NjgzNzcw.r3NmOE0xWmUiCdrJs1w0MC7Slh2EoBuJIfclWVObovcg.cQ2563Qx2lu-Rj6hrohI3MNfHj-7QyLvCs7GiklZk5cg.PNG.osy2201/16.png?type=w800',
@@ -16,6 +18,29 @@ const conditionType = {
     message: '소비량이 총 예산을 넘었어요! 절약!',
   },
 };
+
+const lifeQuotes = [
+  '저축은 미래에 대한 가장 확실한 투자입니다.',
+  '적게 쓰고 많이 모으는 것이 부의 시작이다.',
+  '돈은 작은 부분들의 합이다. 따라서 작은 부분들에 주의를 기울이자.',
+  '절약은 지혜의 첫 번째 단계이다.',
+  '소비자는 소비, 투자자는 투자, 그리고 저축자는 저축해야 한다.',
+  '지출을 줄이고 저축을 늘리면서 돈을 모으세요.',
+  '향후를 위해 오늘을 준비하세요.',
+  '돈을 통제하는 것이 자유를 얻는 길이다.',
+  '저축은 성공의 열쇠 중 하나이다.',
+  '이익보다는 저축이 중요하다.',
+  '가난은 잘못된 소비에서 비롯된다.',
+  '저축은 지식을 늘리는 첫 번째 단계이다.',
+  '오늘의 절약은 내일의 부의 시작이다.',
+  '돈을 효율적으로 관리하면 시간과 에너지를 절약할 수 있다.',
+  '돈을 무분별하게 쓰면, 그 속에는 언제나 불안이 따라다닌다.',
+  '저축은 새로운 시작을 위한 토대이다.',
+  '매일 조금씩 모으면 큰 저축이 된다.',
+  '돈은 지식과 지혜를 가진 사람에게만 본질적인 가치를 발휘한다.',
+  '어떤 돈도 너무 작아서 무시할 일은 없다.',
+  '더 나은 미래를 위해 오늘 행동하세요.',
+];
 
 export const payloads = {
   //디스코드 웹 훅 페이로드 (오늘 지출 추천)
@@ -59,7 +84,7 @@ export const payloads = {
           color: 15258703,
           fields: data,
           footer: {
-            text: '매일 저축하는 작은 금액이 결국 큰 투자로 이어집니다.',
+            text: lifeQuotes[getRandom(0, lifeQuotes.length - 1)],
           },
         },
       ],

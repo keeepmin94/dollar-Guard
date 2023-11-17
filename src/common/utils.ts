@@ -28,3 +28,7 @@ export const calculatePercentage = (part, whole): number => {
 export const amountForm = (amount: number): string => {
   return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
+
+export const getRandom = (min: number, max: number): number => {
+  return Math.floor(Math.random() * (max - min + 1) + min);
+};
