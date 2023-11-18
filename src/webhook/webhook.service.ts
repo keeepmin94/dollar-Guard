@@ -94,8 +94,7 @@ export class WebhookService {
     return result;
   }
 
-  //@Cron(`0 0 8 * * *`, { name: 'morningCronTask' })
-  //@Cron(`0 35 * * * *`, { name: 'morningCronTask' })
+  @Cron(`0 0 8 * * *`, { name: 'morningCronTask' })
   async morningSchedule(): Promise<object[]> {
     try {
       const users = await this.webhookRepository.getMorningConsultingUsers(
@@ -217,7 +216,7 @@ export class WebhookService {
     });
   }
 
-  @Cron(`0 0 8 * * *`, { name: 'eveningCronTask' })
+  @Cron(`0 0 20 * * *`, { name: 'eveningCronTask' })
   async eveningSchedule() {
     try {
       const users = await this.webhookRepository.getMorningConsultingUsers(

@@ -14,6 +14,12 @@ import {
   ExpenditureListDto,
 } from './dto/expenditure.dto';
 import { categoryEnum } from 'src/category/type/category.enum';
+import {
+  toChangeDateFormat,
+  getDayOfWeek,
+  amountForm,
+  calculatePercentage,
+} from 'src/common/utils';
 
 @Injectable()
 export class ExpenditureService {
@@ -233,6 +239,118 @@ export class ExpenditureService {
       });
 
       return expenditure;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async getPreMonthPercentage(user: User): Promise<object[]> {
+    try {
+      const userId = user.id;
+      const result = await this.categoryRepository
+        .createQueryBuilder('category')
+        .select([
+          'coalesce(this.amount, 0) AS this_amount',
+          'coalesce(pre.amount, 0) AS pre_amount',
+          'category.name',
+          `CASE
+          WHEN pre.amount IS NULL THEN 0  
+          WHEN this.amount IS NULL THEN 0  
+          ELSE trunc(this.amount :: decimal /pre.amount :: decimal * 100 ::numeric)
+          END AS ratio_percentage`,
+        ])
+        .leftJoin(
+          (thisMonth) => {
+            return thisMonth
+              .select(['sum(amount_spent) as amount', 'category_id'])
+              .from(Expenditure, 'expenditure')
+              .where(
+                `spent_date between CURRENT_DATE - INTERVAL '1 month' and CURRENT_DATE`,
+              )
+              .andWhere('user_id = :userId', { userId })
+              .andWhere(`except_yn = false`)
+              .groupBy('category_id');
+          },
+          'this',
+          'category.id = this.category_id',
+        )
+        .leftJoin(
+          (preMonth) => {
+            return preMonth
+              .select(['sum(amount_spent) as amount', 'category_id'])
+              .from(Expenditure, 'expenditure')
+              .where(
+                `spent_date between CURRENT_DATE - INTERVAL '2 month' and CURRENT_DATE - INTERVAL '1 month'`,
+              )
+              .andWhere('user_id = :userId', { userId })
+              .andWhere(`except_yn = false`)
+              .groupBy('category_id');
+          },
+          'pre',
+          'category.id = pre.category_id',
+        )
+        .getRawMany();
+
+      return result;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async getPreWeekPercentage(user: User): Promise<object> {
+    try {
+      const userId = user.id;
+      const result = await this.expenditureRepository
+        .createQueryBuilder()
+        .select(['sum(amount_spent) AS amount', 'spent_date'])
+        .where(
+          `(spent_date = CURRENT_DATE - INTERVAL '1 week' OR spent_date = CURRENT_DATE)`,
+        )
+        .andWhere('user_id = :userId', { userId })
+        .groupBy('spent_date')
+        .orderBy('spent_date')
+        .getRawMany();
+
+      const len = result.length;
+      console.log(result);
+      // 오늘 & 일주일 전 지출 없을 때
+      if (len === 0) return { message: '지출 내역이 없습니다.' };
+
+      const today = new Date();
+      const dayName = getDayOfWeek(today);
+
+      const statistics = {
+        lastExpenditure: '',
+        todayExpenditure: '',
+        percentage: '',
+      };
+
+      if (len === 1) {
+        if (
+          toChangeDateFormat(result[0]['spent_date']) ===
+          toChangeDateFormat(new Date())
+        ) {
+          // 오늘 지출 없을때
+          statistics.lastExpenditure = `저번주 ${dayName} 지출이 없습니다.`;
+          statistics.todayExpenditure = amountForm(result[0]['amount']);
+          statistics.percentage = '100%';
+        } else {
+          // 저번주 지출 없을때
+          statistics.lastExpenditure = amountForm(result[0]['amount']);
+          statistics.todayExpenditure = `오늘(${dayName}) 지출이 없습니다.`;
+          statistics.percentage = '0%';
+        }
+
+        return statistics;
+      }
+
+      // 저번주 & 오늘 둘다 있을 때
+      statistics.lastExpenditure = amountForm(result[0]['amount']);
+      statistics.todayExpenditure = amountForm(result[1]['amount']);
+      statistics.percentage =
+        calculatePercentage(result[1]['amount'], result[0]['amount']) + '%';
+
+      return statistics;
     } catch (error) {
       console.log(error);
     }

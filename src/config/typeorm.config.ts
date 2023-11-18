@@ -14,6 +14,10 @@ export const typeORMConfig = async (
     database: configService.get<string>('DB_DATABASE') || 'dollarguard',
     entities: [__dirname + '/../**/*.entity.{js,ts}'],
     synchronize: configService.get<boolean>('DB_SYNCHRONIZE') || true,
+    useUTC: false,
+    // extra: {
+    //   timezone: 'Z', // 원하는 타임존 설정
+    // },
     namingStrategy: new SnakeNamingStrategy(),
     // logging: true,
   };

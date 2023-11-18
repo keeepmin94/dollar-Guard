@@ -68,7 +68,20 @@ export class ExpenditureController {
     expenditureListDto: ExpenditureListDto,
     @GetUser() user: User,
   ): Promise<object[]> {
-    return this.expenditureService.getExpenditureList(expenditureListDto, user);
+    return await this.expenditureService.getExpenditureList(
+      expenditureListDto,
+      user,
+    );
+  }
+
+  @Get('/month')
+  async getPreMonthPercentage(@GetUser() user: User): Promise<object[]> {
+    return await this.expenditureService.getPreMonthPercentage(user);
+  }
+
+  @Get('/week')
+  async getPreWeekPercentage(@GetUser() user: User): Promise<object> {
+    return await this.expenditureService.getPreWeekPercentage(user);
   }
 
   @Get('/:id')
@@ -76,6 +89,6 @@ export class ExpenditureController {
     @Param('id', ParseIntPipe) id: number,
     @GetUser() user: User,
   ): Promise<Expenditure> {
-    return this.expenditureService.getExpenditureDetail(id, user);
+    return await this.expenditureService.getExpenditureDetail(id, user);
   }
 }

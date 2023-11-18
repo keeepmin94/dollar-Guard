@@ -32,3 +32,18 @@ export const amountForm = (amount: number): string => {
 export const getRandom = (min: number, max: number): number => {
   return Math.floor(Math.random() * (max - min + 1) + min);
 };
+
+export const toChangeDateFormat = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = ('0' + (date.getMonth() + 1)).slice(-2);
+  const day = ('0' + date.getDate()).slice(-2);
+  return `${year}-${month}-${day}`;
+};
+
+const dayOfName = ['일', '월', '화', '수', '목', '금', '토'];
+
+export const getDayOfWeek = (date: Date): string => {
+  const dayOfWeek = date.getDay();
+
+  return dayOfName[dayOfWeek];
+};
