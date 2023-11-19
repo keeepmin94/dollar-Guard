@@ -1,11 +1,14 @@
 import { IsString, MinLength, MaxLength, Matches } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterUser {
+  @ApiProperty({ description: '계정' })
   @IsString()
   @MinLength(4)
   @MaxLength(20)
   userName: string;
 
+  @ApiProperty({ description: '비밀번호' })
   @IsString()
   @MinLength(10, { message: '최소 10자리 이상 작성해야 합니다.' })
   @MaxLength(20)

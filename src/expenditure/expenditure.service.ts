@@ -98,7 +98,7 @@ export class ExpenditureService {
       });
 
       if (result.affected === 0) {
-        throw new NotFoundException(`Can't find Board with id ${id}`);
+        throw new NotFoundException(`Can't find Expenditure with id ${id}`);
       }
 
       return { message: '성공적으로 지출 삭제를 완료했습니다.' };
@@ -435,10 +435,6 @@ export class ExpenditureService {
       };
       const othersAvg = getAvg(others);
       const myAvg = getAvg(my);
-      console.log(others);
-      console.log(my);
-      console.log(othersAvg);
-      console.log(myAvg);
 
       const percentage = Math.round((myAvg / othersAvg) * 100);
       return { percentage: percentage + '%' };

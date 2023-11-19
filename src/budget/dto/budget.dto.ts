@@ -5,6 +5,7 @@ import {
 } from 'class-validator';
 import { ValueOptions } from 'src/category/type/category.enum';
 import { IsRightDateFormat } from 'src/common/customValidate.decorator';
+import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
 
 // 카테고리 형식 유효성 검사
 @ValidatorConstraint({ name: 'IsRightBudgetByCategory' })
@@ -40,11 +41,36 @@ export class IsRightBudgetByCategory implements ValidatorConstraintInterface {
   }
 }
 
+@ApiExtraModels()
 export class BudgetDto {
+  @ApiProperty({
+    required: true,
+    type: String,
+    description: '예산 시작일(yyyy-MM-dd)',
+    example: '2023-11-01',
+  })
   @Validate(IsRightDateFormat)
   startDate: Date;
+  @ApiProperty({
+    required: true,
+    type: String,
+    description: '예산 종료일(yyyy-MM-dd)',
+    example: '2023-11-30',
+  })
   @Validate(IsRightDateFormat)
   endDate: Date;
+  @ApiProperty({
+    required: true,
+    type: Object,
+    description: '카테고리별 금액(식비, 주거, 문화, 교통, 취미, 레져, 기타)',
+    example: `
+    {
+      식비: 50000,
+      거주: 60000,
+      문화: 10000
+    }
+    `,
+  })
   @Validate(IsRightBudgetByCategory)
   priceByCategory: object;
 }
