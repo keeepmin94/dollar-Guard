@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Expenditure } from './entities/expenditure.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Category } from 'src/category/entities/category.entity';
@@ -20,6 +20,7 @@ import {
   amountForm,
   calculatePercentage,
 } from 'src/common/utils';
+import { Budget } from 'src/budget/entities/budget.entity';
 
 @Injectable()
 export class ExpenditureService {
@@ -30,6 +31,7 @@ export class ExpenditureService {
     private userRepository: Repository<User>,
     @InjectRepository(Category)
     private categoryRepository: Repository<Category>,
+    private dataSource: DataSource,
   ) {}
 
   async createExpenditure(
@@ -351,6 +353,95 @@ export class ExpenditureService {
         calculatePercentage(result[1]['amount'], result[0]['amount']) + '%';
 
       return statistics;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async getUsersExpenditureStatistics(user: User): Promise<object> {
+    try {
+      const userId = user.id;
+      const otherSubQuery = this.expenditureRepository
+        .createQueryBuilder()
+        .subQuery()
+        .select(['sum(amount_spent) as amount_sum', 'user_id'])
+        .from(Expenditure, 'ex')
+        .where('spent_date = current_date')
+        .andWhere(`user_id <> :userId`, { userId })
+        .andWhere('except_yn = false')
+        .groupBy('user_id')
+        .getQuery();
+
+      const otherQuery = this.dataSource
+        .createQueryBuilder()
+        .select([
+          'CAST (ex.amount_sum AS INTEGER)',
+          'budget.total as budget_total',
+        ])
+        .from(otherSubQuery, 'ex')
+        .innerJoin(
+          Budget,
+          'budget',
+          'current_date between budget.start_date and budget.end_date and ex.user_id = budget.user_id',
+        )
+        .setParameter('userId', userId);
+
+      const mySubQuery = this.expenditureRepository
+        .createQueryBuilder()
+        .subQuery()
+        .select(['sum(amount_spent) as amount_sum', 'user_id'])
+        .from(Expenditure, 'ex')
+        .where('spent_date = current_date')
+        .andWhere(`user_id = :userId`, { userId })
+        .andWhere('except_yn = false')
+        .groupBy('user_id')
+        .getQuery();
+
+      const myQuery = this.dataSource
+        .createQueryBuilder()
+        .select([
+          'CAST (ex.amount_sum AS INTEGER)',
+          'budget.total as budget_total',
+        ])
+        .from(mySubQuery, 'ex')
+        .innerJoin(
+          Budget,
+          'budget',
+          'current_date between budget.start_date and budget.end_date and ex.user_id = budget.user_id',
+        )
+        .setParameter('userId', userId);
+
+      const others = await otherQuery.getRawMany();
+      const my = await myQuery.getRawMany();
+
+      if (others.length + my.length === 0)
+        throw new NotFoundException('지출을 목록이 없습니다.');
+
+      if (my.length === 0)
+        throw new NotFoundException('오늘 일자 사용자의 지출이 없습니다.');
+
+      if (others.length === 0)
+        throw new NotFoundException('오늘 일자 다른 사용자의 지출이 없습니다.');
+
+      // 다른 유저들의 평균 소비율
+      const getAvg = (collection: any[]) => {
+        return Math.round(
+          collection.reduce(
+            (acc, cur) =>
+              acc + calculatePercentage(cur['amount_sum'], cur['budget_total']),
+            0,
+          ) / collection.length,
+        );
+      };
+      const othersAvg = getAvg(others);
+      const myAvg = getAvg(my);
+      console.log(others);
+      console.log(my);
+      console.log(othersAvg);
+      console.log(myAvg);
+
+      const percentage = Math.round((myAvg / othersAvg) * 100);
+      return { percentage: percentage + '%' };
     } catch (error) {
       console.log(error);
     }

@@ -84,6 +84,11 @@ export class ExpenditureController {
     return await this.expenditureService.getPreWeekPercentage(user);
   }
 
+  @Get('/users')
+  async getUsersExpenditureStatistics(@GetUser() user: User): Promise<object> {
+    return await this.expenditureService.getUsersExpenditureStatistics(user);
+  }
+
   @Get('/:id')
   async getExpenditureDetail(
     @Param('id', ParseIntPipe) id: number,
