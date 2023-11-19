@@ -230,11 +230,11 @@ Swagger : http://localhost:{port}/swagger#/
 
 ## TIL 및 회고
 
-- [Passport Unauthorized!?]()
-- [Custom Validator Decorator]()
-- [authentication & authorization]()
-- [QueryBuilder에 관하여]()
-- [Custom Repository]()
+- [Passport Unauthorized!?](https://generated-cheddar-8e9.notion.site/Passport-Unauthorized-945950106cb149f7b6add6d6f86295e0?pvs=4)
+- [Custom Validator Decorator](https://generated-cheddar-8e9.notion.site/Custom-Validator-Decorator-e570d8da3b2a4749b1dd227ce2cf8ba9?pvs=4)
+- [authentication & authorization](https://dev-j.notion.site/authentication-authorization-0d28b81b14204cdf8098df64db62e124?pvs=4)
+- [QueryBuilder에 관하여](https://generated-cheddar-8e9.notion.site/queryBuilder-54bd7bb64ddf43578c544a2d53792f1f?pvs=4)
+- [Custom Repository](https://generated-cheddar-8e9.notion.site/Custom-Repository-fac99a0bed934d6bb0e2c19dc13918c4?pvs=4)
 
 <br/>
 
