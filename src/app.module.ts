@@ -7,8 +7,6 @@ import { UserModule } from './user/user.module';
 import { BudgetModule } from './budget/budget.module';
 import { ExpenditureModule } from './expenditure/expenditure.module';
 import { CategoryModule } from './category/category.module';
-import { ConsultingModule } from './consulting/consulting.module';
-import { StatisticsModule } from './statistics/statistics.module';
 import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
@@ -34,8 +32,6 @@ import { WebhookModule } from './webhook/webhook.module';
     BudgetModule,
     ExpenditureModule,
     CategoryModule,
-    ConsultingModule,
-    StatisticsModule,
     WebhookModule,
   ],
 })
