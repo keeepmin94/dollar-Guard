@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ExpenditureController } from './expenditure.controller';
-import { ExpenditureService } from './expenditure.service';
+import { ExpenditureController } from '../../src/expenditure/expenditure.controller';
+import { ExpenditureService } from '../../src/expenditure/expenditure.service';
 import { User } from 'src/user/entities/user.entity';
 import {
   ExpenditureCreateDto,
   ExpenditureUpdateDto,
   ExpenditureListDto,
-} from './dto/expenditure.dto';
+} from '../../src/expenditure/dto/expenditure.dto';
 
 describe('ExpenditureController', () => {
   let controller: ExpenditureController;

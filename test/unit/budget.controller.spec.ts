@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BudgetController } from './budget.controller';
-import { BudgetService } from './budget.service';
-import { BudgetDto } from './dto/budget.dto';
+import { BudgetController } from '../../src/budget/budget.controller';
+import { BudgetService } from '../../src/budget/budget.service';
+import { BudgetDto } from '../../src/budget/dto/budget.dto';
 import { User } from 'src/user/entities/user.entity';
 
 describe('BudgetController', () => {
