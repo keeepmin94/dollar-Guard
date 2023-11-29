@@ -1,5 +1,6 @@
 import {
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -27,8 +28,6 @@ export class ExpenditureService {
   constructor(
     @InjectRepository(Expenditure)
     private expenditureRepository: Repository<Expenditure>,
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
     @InjectRepository(Category)
     private categoryRepository: Repository<Category>,
     private dataSource: DataSource,
@@ -54,7 +53,9 @@ export class ExpenditureService {
       await this.expenditureRepository.save(expenditure_);
 
       return { message: '지출을 성공적으로 저장했습니다.' };
-    } catch (error) {}
+    } catch (error) {
+      throw new InternalServerErrorException('지출 저장을 실패했습니다.');
+    }
   }
 
   async updateExpenditure(
@@ -62,30 +63,26 @@ export class ExpenditureService {
     user: User,
     id: number,
   ): Promise<object> {
-    try {
-      const expenditure = await this.expenditureRepository.findOne({
-        where: { id },
-        relations: {
-          user: true,
-        },
-      });
+    const expenditure = await this.expenditureRepository.findOne({
+      where: { id },
+      relations: {
+        user: true,
+      },
+    });
+    console.log(expenditure);
+    if (!expenditure)
+      throw new NotFoundException('해당 지출 내역을 찾을 수 없습니다.');
 
-      if (!expenditure)
-        throw new NotFoundException('해당 지출 내역을 찾을 수 없습니다.');
+    if (expenditure.user.id !== user.id)
+      throw new UnauthorizedException(
+        '유저가 작성한 지출 내역만 수정할 수 있습니다.',
+      );
 
-      if (expenditure.user.id !== user.id)
-        throw new UnauthorizedException(
-          '유저가 작성한 지출 내역만 수정할 수 있습니다.',
-        );
+    const updateValues = { ...expenditureUpdateDto };
 
-      const updateValues = { ...expenditureUpdateDto };
+    await this.expenditureRepository.update(id, updateValues);
 
-      await this.expenditureRepository.update(id, updateValues);
-
-      return { message: '성공적으로 지출 수정을 완료했습니다.' };
-    } catch (error) {
-      console.log(error);
-    }
+    return { message: '성공적으로 지출 수정을 완료했습니다.' };
   }
 
   async deleteExpenditure(id: number, user: User): Promise<object> {
