@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
@@ -16,8 +16,6 @@ export class BudgetService {
     private budgetRepository: Repository<Budget>,
     @InjectRepository(BudgetCategory)
     private budgetCategoryRepository: Repository<BudgetCategory>,
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
     @InjectRepository(Category)
     private categoryRepository: Repository<Category>,
   ) {}
@@ -72,6 +70,7 @@ export class BudgetService {
       await this.budgetCategoryRepository.save(eachBudget);
     } catch (error) {
       console.log(error);
+      throw new InternalServerErrorException();
     }
   }
 
@@ -128,8 +127,11 @@ export class BudgetService {
         .orderBy('ratio', 'DESC');
 
       const ratio = await result.getRawMany();
-
       return this.getPercentageTotalAmount(ratio, totalPrice);
-    } catch (error) {}
+    } catch (error) {
+      throw new InternalServerErrorException(
+        '추천 예산을 불러오는 도중 에러가 발생했습니다.',
+      );
+    }
   }
 }

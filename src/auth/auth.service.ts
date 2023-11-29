@@ -22,23 +22,18 @@ export class AuthService {
   ) {}
 
   async signIn(logIntDto: LogInDto): Promise<{ accessToken: string }> {
-    try {
-      const { userName, password } = logIntDto;
-      const user = await this.userRepository.findOne({ where: { userName } });
+    const { userName, password } = logIntDto;
+    const user = await this.userRepository.findOne({ where: { userName } });
 
-      if (!user)
-        throw new UnprocessableEntityException('해당 유저가 없습니다.');
+    if (!user) throw new UnprocessableEntityException('해당 유저가 없습니다.');
 
-      const isAuth = await bcrypt.compare(password, user.password);
+    const isAuth = await bcrypt.compare(password, user.password);
 
-      if (!isAuth) throw new UnauthorizedException('비밀번호가 틀렸습니다.');
+    if (!isAuth) throw new UnauthorizedException('비밀번호가 틀렸습니다.');
 
-      const payload = { userId: user.id, userName: user.userName };
-      const accessToken = await this.jwtService.signAsync(payload);
+    const payload = { userId: user.id, userName: user.userName };
+    const accessToken = await this.jwtService.signAsync(payload);
 
-      return { accessToken };
-    } catch (error) {
-      throw new InternalServerErrorException('로그인 중 에러가 발생했습니다.');
-    }
+    return { accessToken };
   }
 }
